@@ -163,7 +163,7 @@ const TemplateGenerator: React.FC = () => {
       ctx.fillText('Shadowboard Layout Template', margin + logoWidth + 20, canvas.height - 35);
       
       ctx.font = '12px Arial';
-      ctx.fillText('Bespoke Industrial Group', margin + logoWidth + 20, canvas.height - 20);
+      ctx.fillText('Bespoke', margin + logoWidth + 20, canvas.height - 20);
       ctx.fillText('https://bespoketooltrays.com/', margin + logoWidth + 20, canvas.height - 5);
     };
     
@@ -177,7 +177,7 @@ const TemplateGenerator: React.FC = () => {
       ctx.fillText('Shadowboard Layout Template', margin, canvas.height - 40);
       
       ctx.font = '12px Arial';
-      ctx.fillText('Bespoke Industrial Group', margin, canvas.height - 20);
+      ctx.fillText('Bespoke', margin, canvas.height - 20);
       ctx.fillText('https://bespoketooltrays.com/', margin + 200, canvas.height - 20);
     };
   };
@@ -729,7 +729,7 @@ const TemplateGenerator: React.FC = () => {
         {/* Footer */}
         <div className="mt-12 text-center text-gray-600">
           <p className="mb-2">
-            © 2025 Bespoke Industrial Group - Professional Tool Organization Solutions
+            © 2025 Bespoke - Professional Tool Organization Solutions
           </p>
           <p className="text-sm">
             Visit us at{' '}
