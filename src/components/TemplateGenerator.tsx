@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, Printer, Grid, Ruler } from 'lucide-react';
+import { Download, Printer, Grid, Ruler, FileText } from 'lucide-react';
 
 interface Dimensions {
   width: number;
@@ -163,12 +163,12 @@ const TemplateGenerator: React.FC = () => {
       ctx.fillText('Shadowboard Layout Template', margin + logoWidth + 20, canvas.height - 35);
       
       ctx.font = '12px Arial';
-      ctx.fillText('Bespoke Group', margin + logoWidth + 20, canvas.height - 20);
-      ctx.fillText('www.bespoketooltrays.com', margin + logoWidth + 20, canvas.height - 5);
+      ctx.fillText('Bespoke Industrial Group', margin + logoWidth + 20, canvas.height - 20);
+      ctx.fillText('https://bespoketooltrays.com/', margin + logoWidth + 20, canvas.height - 5);
     };
     
     // Set logo source - this will trigger the onload event
-    logo.src = '/51.png';
+    logo.src = '/50.png';
     
     // Fallback if logo doesn't load - draw text only
     logo.onerror = () => {
@@ -177,8 +177,8 @@ const TemplateGenerator: React.FC = () => {
       ctx.fillText('Shadowboard Layout Template', margin, canvas.height - 40);
       
       ctx.font = '12px Arial';
-      ctx.fillText('Bespoke Group', margin, canvas.height - 20);
-      ctx.fillText('www.bespoketooltrays.com', margin + 200, canvas.height - 20);
+      ctx.fillText('Bespoke Industrial Group', margin, canvas.height - 20);
+      ctx.fillText('https://bespoketooltrays.com/', margin + 200, canvas.height - 20);
     };
   };
 
@@ -223,6 +223,185 @@ const TemplateGenerator: React.FC = () => {
         </body>
       </html>
     `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const generateTiledTemplate = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || dimensions.width <= 0 || dimensions.height <= 0) return;
+
+    // Standard US Letter size in inches (with margins)
+    const pageWidth = 8.5;
+    const pageHeight = 11;
+    const pageMargin = 0.5; // 0.5 inch margins
+    const printableWidth = pageWidth - (pageMargin * 2);
+    const printableHeight = pageHeight - (pageMargin * 2);
+    
+    const dpi = 72;
+    const templateMargin = 1; // 1 inch margin for scales and labels
+    
+    // Calculate total template size including margins
+    const totalWidth = dimensions.width + (templateMargin * 2);
+    const totalHeight = dimensions.height + (templateMargin * 2);
+    
+    // Calculate how many pages needed
+    const pagesX = Math.ceil(totalWidth / printableWidth);
+    const pagesY = Math.ceil(totalHeight / printableHeight);
+    
+    // Create a new window for the tiled print
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    let htmlContent = `
+      <html>
+        <head>
+          <title>Shadowboard Template - Tiled Print (${pagesX}x${pagesY} pages)</title>
+          <style>
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-family: Arial, sans-serif;
+            }
+            .page { 
+              width: ${pageWidth}in; 
+              height: ${pageHeight}in; 
+              margin: 0;
+              padding: ${pageMargin}in;
+              box-sizing: border-box;
+              page-break-after: always;
+              position: relative;
+              border: 1px solid #ccc;
+              margin-bottom: 10px;
+            }
+            .page:last-child {
+              page-break-after: auto;
+              margin-bottom: 0;
+            }
+            .page-info {
+              position: absolute;
+              top: 5px;
+              right: 5px;
+              font-size: 10px;
+              color: #666;
+              background: white;
+              padding: 2px 5px;
+              border: 1px solid #ccc;
+            }
+            .assembly-guide {
+              margin: 20px;
+              padding: 15px;
+              border: 2px solid #333;
+              background: #f9f9f9;
+              page-break-inside: avoid;
+            }
+            .grid-container {
+              display: grid;
+              grid-template-columns: repeat(${pagesX}, 1fr);
+              gap: 2px;
+              margin: 10px 0;
+            }
+            .grid-cell {
+              border: 1px solid #ccc;
+              padding: 5px;
+              text-align: center;
+              font-size: 10px;
+              min-height: 20px;
+            }
+            @media print {
+              body { margin: 0; padding: 0; }
+              .page { 
+                margin: 0;
+                border: none;
+                margin-bottom: 0;
+              }
+              .assembly-guide {
+                margin: 0;
+                page-break-before: always;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="assembly-guide">
+            <h2>Assembly Instructions</h2>
+            <p><strong>Template Size:</strong> ${dimensions.width}" × ${dimensions.height}"</p>
+            <p><strong>Pages Required:</strong> ${pagesX} × ${pagesY} = ${pagesX * pagesY} pages</p>
+            <p><strong>Instructions:</strong></p>
+            <ol>
+              <li>Print all ${pagesX * pagesY} pages at 100% scale (no scaling)</li>
+              <li>Trim pages along the dotted lines if present</li>
+              <li>Arrange pages according to the grid below</li>
+              <li>Tape or glue pages together, overlapping edges slightly</li>
+              <li>The assembled template will be ${dimensions.width}" × ${dimensions.height}"</li>
+            </ol>
+            <h3>Page Layout Grid:</h3>
+            <div class="grid-container">
+    `;
+
+    // Add page layout grid
+    for (let row = 0; row < pagesY; row++) {
+      for (let col = 0; col < pagesX; col++) {
+        const pageNum = (row * pagesX) + col + 1;
+        htmlContent += `<div class="grid-cell">Page ${pageNum}<br>Row ${row + 1}, Col ${col + 1}</div>`;
+      }
+    }
+
+    htmlContent += `
+            </div>
+          </div>
+    `;
+
+    // Generate each page
+    for (let row = 0; row < pagesY; row++) {
+      for (let col = 0; col < pagesX; col++) {
+        const pageNum = (row * pagesX) + col + 1;
+        
+        // Create a canvas for this page section
+        const pageCanvas = document.createElement('canvas');
+        const pageCtx = pageCanvas.getContext('2d');
+        if (!pageCtx) continue;
+
+        // Set page canvas size
+        pageCanvas.width = printableWidth * dpi;
+        pageCanvas.height = printableHeight * dpi;
+
+        // Clear canvas
+        pageCtx.fillStyle = 'white';
+        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+        // Calculate the section of the main template to draw
+        const sectionX = col * printableWidth;
+        const sectionY = row * printableHeight;
+
+        // Draw the section from the main canvas
+        const mainCanvas = canvasRef.current;
+        if (mainCanvas) {
+          pageCtx.drawImage(
+            mainCanvas,
+            sectionX * dpi, sectionY * dpi, // Source position
+            printableWidth * dpi, printableHeight * dpi, // Source size
+            0, 0, // Destination position
+            printableWidth * dpi, printableHeight * dpi // Destination size
+          );
+        }
+
+        // Add page to HTML
+        htmlContent += `
+          <div class="page">
+            <div class="page-info">Page ${pageNum} of ${pagesX * pagesY}<br>Row ${row + 1}, Col ${col + 1}</div>
+            <img src="${pageCanvas.toDataURL()}" style="width: 100%; height: auto;" alt="Template Page ${pageNum}" />
+          </div>
+        `;
+      }
+    }
+
+    htmlContent += `
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
     printWindow.print();
   };
@@ -375,6 +554,11 @@ const TemplateGenerator: React.FC = () => {
     }
   };
 
+  // Calculate if tiled printing is needed
+  const needsTiling = dimensions.width > 6.5 || dimensions.height > 8.5;
+  const tiledPages = needsTiling ? 
+    Math.ceil((dimensions.width + 2) / 7.5) * Math.ceil((dimensions.height + 2) / 9.5) : 1;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -465,6 +649,11 @@ const TemplateGenerator: React.FC = () => {
                     </span>
                   )}
                 </p>
+                {needsTiling && (
+                  <p className="text-orange-700 text-xs mt-1">
+                    ⚠️ Large template - will require {tiledPages} pages when tiled
+                  </p>
+                )}
               </div>
             )}
 
@@ -483,8 +672,27 @@ const TemplateGenerator: React.FC = () => {
                   className="w-full bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center text-sm"
                 >
                   <Printer className="h-4 w-4 mr-2" />
-                  Print Template
+                  Print Single Page
                 </button>
+                <button
+                  onClick={generateTiledTemplate}
+                  className="w-full bg-purple-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center text-sm"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Print Tiled Pages
+                  {needsTiling && <span className="ml-1 text-xs">({tiledPages} pages)</span>}
+                </button>
+              </div>
+            )}
+
+            {/* Tiling Information */}
+            {needsTiling && dimensions.width > 0 && dimensions.height > 0 && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <h3 className="font-medium text-orange-800 mb-1 text-sm">Tiled Printing Info:</h3>
+                <p className="text-orange-700 text-xs">
+                  This template is larger than a standard 8.5×11" page. Use "Print Tiled Pages" 
+                  to break it into {tiledPages} printable pages with assembly instructions.
+                </p>
               </div>
             )}
           </div>
@@ -521,7 +729,7 @@ const TemplateGenerator: React.FC = () => {
         {/* Footer */}
         <div className="mt-12 text-center text-gray-600">
           <p className="mb-2">
-            © 2025 Bespoke Tooltrays - Professional Tool Organization Solutions
+            © 2025 Bespoke Industrial Group - Professional Tool Organization Solutions
           </p>
           <p className="text-sm">
             Visit us at{' '}
@@ -531,7 +739,7 @@ const TemplateGenerator: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              www.bespoketooltrays.com
+              https://bespoketooltrays.com/
             </a>
           </p>
         </div>
